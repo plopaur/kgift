@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=KGift
+Comment=Eine Geschenkbox zum Aufklicken – mit Konfetti
+Comment[en]=A gift box to click open – with confetti
+Exec=kgift %f
+Icon=package-x-generic
+Terminal=false
+Categories=Qt;KDE;Amusement;
+MimeType=image/png;image/jpeg;image/gif;image/webp;image/bmp;image/svg+xml;
