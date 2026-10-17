@@ -13,6 +13,7 @@ gewählt werden.
 import math
 import os
 import random
+import signal
 import sys
 
 from PySide6.QtCore import QElapsedTimer, QPointF, QRectF, Qt, QTimer
@@ -580,6 +581,9 @@ def main():
     app.setApplicationName("kgift")
     app.setApplicationDisplayName("KGift")
     app.setDesktopFileName("kgift")
+    # Strg+C im Terminal beendet sauber, statt mitten im paintEvent
+    # einen KeyboardInterrupt auszulösen
+    signal.signal(signal.SIGINT, lambda *_: app.quit())
 
     args = [a for a in app.arguments()[1:] if not a.startswith("-")]
     w = GiftWidget(args[0] if args else None)
