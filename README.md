@@ -1,6 +1,6 @@
 # KGift 🎁
 
-A small Qt/KDE program: an isometric gift box that opens with a click.
+A small Qt/KDE program, with a native Android port: an isometric gift box that opens with a click.
 The lid flies off, confetti rains down and a picture pops out –
 by default `gp.jpg` from the program folder (if it is missing, a heart is drawn instead).
 
@@ -34,6 +34,22 @@ install -Dm755 kgift.py ~/.local/bin/kgift
 install -Dm644 gp.jpg ~/.local/share/kgift/gp.jpg
 install -Dm644 kgift.desktop ~/.local/share/applications/kgift.desktop
 ```
+
+## Android
+
+`android/` contains a native Android port (Kotlin, `android.graphics.Canvas`) of the same
+animation – tap to open the box, tap again to close it, Back quits.
+Open the folder in Android Studio, or build from the command line:
+
+```bash
+cd android
+./gradlew installDebug    # build and install on a connected phone
+```
+
+Gradle needs JDK 17–21; Android Studio's own JDK is newer, so point `JAVA_HOME`
+at a JDK 21 when building from the terminal.
+
+The picture comes from `android/app/src/main/assets/gp.jpg` (without it, a heart is drawn).
 
 ## License
 

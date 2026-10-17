@@ -1,2 +1,11 @@
 .venv/
 __pycache__/
+
+# Android
+android/.gradle/
+android/.idea/
+android/.kotlin/
+android/build/
+android/app/build/
+android/local.properties
+*.iml
