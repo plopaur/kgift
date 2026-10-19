@@ -1,0 +1,183 @@
+{
+  "only_py": [
+    "GiftView.chooseImage",
+    "GiftView.contextMenuEvent",
+    "GiftView.dragEnterEvent",
+    "GiftView.dropEvent",
+    "GiftView.keyPressEvent",
+    "GiftView.renderIcon",
+    "GiftView.tick",
+    "main"
+  ],
+  "only_kt": [
+    "GiftView.onSizeChanged",
+    "GiftView.onTouchEvent",
+    "GiftView.pen",
+    "GiftView.toggle",
+    "ImageGeometry.<init>",
+    "darker",
+    "lighter",
+    "scaleValue",
+    "uniform"
+  ],
+  "numbers": {
+    "<top>": {
+      "py": [
+        "30.0"
+      ],
+      "kt": [
+        "2.0",
+        "6.0"
+      ]
+    },
+    "GiftView.<init>": {
+      "py": [
+        "16.0",
+        "420.0",
+        "480.0",
+        "640.0",
+        "720.0"
+      ],
+      "kt": [
+        "0.0",
+        "0.0",
+        "0.0",
+        "0.0",
+        "0.0",
+        "1.0",
+        "110.0"
+      ]
+    },
+    "GiftView.advance": {
+      "py": [
+        "2.0"
+      ],
+      "kt": [
+        "125.0"
+      ]
+    },
+    "GiftView.drawBow": {
+      "py": [
+        "0.0",
+        "0.1"
+      ],
+      "kt": [
+        "0.03",
+        "0.07",
+        "0.13",
+        "0.14"
+      ]
+    },
+    "GiftView.drawConfetti": {
+      "py": [
+        "0.45"
+      ],
+      "kt": [
+        "2.0",
+        "2.0"
+      ]
+    },
+    "GiftView.drawFlyingLid": {
+      "py": [],
+      "kt": [
+        "255.0"
+      ]
+    },
+    "GiftView.drawHint": {
+      "py": [
+        "0.0",
+        "0.1",
+        "0.87",
+        "12.0",
+        "36.0"
+      ],
+      "kt": [
+        "0.92",
+        "14.0",
+        "2.0",
+        "2.0",
+        "27.0"
+      ]
+    },
+    "GiftView.drawImage": {
+      "py": [],
+      "kt": [
+        "2.0",
+        "2.0"
+      ]
+    },
+    "GiftView.drawRays": {
+      "py": [
+        "1.0"
+      ],
+      "kt": []
+    },
+    "GiftView.drawShadow": {
+      "py": [
+        "0.0",
+        "0.0",
+        "0.0",
+        "0.0",
+        "0.0",
+        "0.0",
+        "0.0",
+        "0.0",
+        "0.0",
+        "0.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "110.0"
+      ],
+      "kt": []
+    },
+    "GiftView.drawSparkles": {
+      "py": [
+        "0.0"
+      ],
+      "kt": []
+    },
+    "GiftView.onDraw": {
+      "py": [
+        "#120c26",
+        "#3a2d6b",
+        "0.45",
+        "0.8",
+        "1.0",
+        "2.0"
+      ],
+      "kt": [
+        "0.0",
+        "0.05",
+        "1000000000.0"
+      ]
+    },
+    "defaultBitmap": {
+      "py": [
+        "#ffffff",
+        "#ffffff",
+        "1.0",
+        "110.0",
+        "120.0",
+        "350.0",
+        "38.0"
+      ],
+      "kt": [
+        "121.0",
+        "2.0",
+        "2.0",
+        "405.0",
+        "50.0"
+      ]
+    },
+    "poly": {
+      "py": [],
+      "kt": [
+        "0.0",
+        "1.0",
+        "2.0",
+        "3.0"
+      ]
+    }
+  }
+}

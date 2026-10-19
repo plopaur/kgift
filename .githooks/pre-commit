@@ -1,0 +1,22 @@
+#!/bin/sh
+# Hält kgift.py und den Android-Port GiftView.kt synchron (siehe tools/check_parity.py).
+# Aktivieren: git config core.hooksPath .githooks
+
+PY=kgift.py
+KT=android/app/src/main/java/at/loon/kgift/GiftView.kt
+staged=$(git diff --cached --name-only)
+
+has() { printf '%s\n' "$staged" | grep -qx "$1"; }
+
+has "$PY" && py=1 || py=0
+has "$KT" && kt=1 || kt=0
+if [ $py = 0 ] && [ $kt = 0 ] && ! has tools/parity-baseline.json && ! has tools/check_parity.py; then
+    exit 0
+fi
+
+if [ $py != $kt ]; then
+    [ $py = 1 ] && other=$KT || other=$PY
+    echo "Hinweis: nur ein Port geändert – muss $other nachgezogen werden?" >&2
+fi
+
+exec python3 tools/check_parity.py --staged

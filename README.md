@@ -51,6 +51,19 @@ at a JDK 21 when building from the terminal.
 
 The picture comes from `android/app/src/main/assets/gp.jpg` (without it, a heart is drawn).
 
+### Keeping both ports in sync
+
+`GiftView.kt` mirrors `kgift.py` function by function. `tools/check_parity.py` pairs the
+functions by name and compares their numeric and colour literals; known, intentional
+differences live in `tools/parity-baseline.json`. Enable the pre-commit hook once per clone:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+If a difference is intentional, accept it with `python3 tools/check_parity.py --update`
+and commit the updated baseline.
+
 ## License
 
 MIT – see [LICENSE](LICENSE).
