@@ -24,13 +24,14 @@ import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sin
+import kotlin.math.sqrt
 import kotlin.random.Random
 
 /*
  * Port von kgift.py: eine isometrische Geschenkbox zum Antippen.
  *
  * Antippen öffnet die Box: der Deckel fliegt weg, Konfetti regnet
- * und ein Bild springt heraus (assets/gp.jpg; fehlt es, wird ein Herz gezeichnet).
+ * und ein Bild springt heraus (assets/picture.jpg; fehlt es, wird eine Geburtstagstorte gezeichnet).
  */
 
 private val PI_F = PI.toFloat()
@@ -46,6 +47,8 @@ private const val RIBBON = 0.17f    // halbe Breite des Geschenkbands
 
 private val BOX_COLOR = Color.rgb(214, 48, 64)
 private val RIBBON_COLOR = Color.rgb(247, 196, 70)
+private val FROSTING_COLOR = Color.parseColor("#fff8f0")
+private val CANDLE_COLOR = Color.parseColor("#40c4ff")
 private val CONFETTI_COLORS = intArrayOf(
     Color.parseColor("#ff5252"), Color.parseColor("#ffd740"), Color.parseColor("#69f0ae"),
     Color.parseColor("#40c4ff"), Color.parseColor("#e040fb"), Color.parseColor("#ff9100"),
@@ -96,41 +99,21 @@ private fun scaleValue(color: Int, f: Float): Int {
 private fun lighter(color: Int, factor: Int) = scaleValue(color, factor / 100f)
 private fun darker(color: Int, factor: Int) = scaleValue(color, 100f / factor)
 
-/** Erzeugt ein Standardbild, falls kein gp.jpg mitgeliefert wird. */
-private fun defaultBitmap(): Bitmap {
-    val size = 480f
-    val bm = Bitmap.createBitmap(size.toInt(), size.toInt(), Bitmap.Config.ARGB_8888)
-    val c = Canvas(bm)
-    val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-    paint.shader = LinearGradient(0f, 0f, size, size, Color.parseColor("#ff9a9e"),
-        Color.parseColor("#a18cd1"), Shader.TileMode.CLAMP)
-    c.drawRect(0f, 0f, size, size, paint)
-    paint.shader = null
+/** Zwei zufällige, gut unterscheidbare Farben für die Tortenstockwerke. */
+private fun randomCakeColors(): IntArray {
+    val hue = Random.nextInt(360)
+    return intArrayOf(0, Random.nextInt(60, 301)).map { dh ->
+        Color.HSVToColor(floatArrayOf(((hue + dh) % 360).toFloat(),
+            Random.nextInt(90, 201) / 255f, Random.nextInt(150, 241) / 255f))
+    }.toIntArray()
+}
 
-    val rnd = Random(7)
-    repeat(40) {
-        paint.color = Color.argb(rnd.nextInt(40, 121), 255, 255, 255)
-        val r = rnd.uniform(3f, 9f)
-        c.drawCircle(rnd.uniform(0f, size), rnd.uniform(0f, size), r, paint)
-    }
-
-    val heart = Path()
-    heart.moveTo(240f, 340f)
-    heart.cubicTo(80f, 240f, 110f, 90f, 240f, 160f)
-    heart.cubicTo(370f, 90f, 400f, 240f, 240f, 340f)
-    paint.color = Color.parseColor("#ff1744")
-    c.drawPath(heart, paint)
-    paint.style = Paint.Style.STROKE
-    paint.strokeWidth = 8f
-    paint.color = Color.WHITE
-    c.drawPath(heart, paint)
-
-    paint.style = Paint.Style.FILL
-    paint.typeface = Typeface.DEFAULT_BOLD
-    paint.textSize = 50f
-    paint.textAlign = Paint.Align.CENTER
-    c.drawText("Überraschung!", size / 2, 405f - (paint.ascent() + paint.descent()) / 2, paint)
-    return bm
+/** Umriss eines liegenden Kreises (Mittelpunkt x, y, z) in isometrischer Ansicht. */
+private fun isoEllipse(x: Float, y: Float, r: Float, z: Float): RectF {
+    val c = iso(x, y, z)
+    val rx = r * COS30 * sqrt(2f)
+    val ry = r * sqrt(0.5f)
+    return RectF(c.x - rx, c.y - ry, c.x + rx, c.y + ry)
 }
 
 private class Confetti(var x: Float, var y: Float) {
@@ -168,7 +151,7 @@ private class Confetti(var x: Float, var y: Float) {
 private class ImageGeometry(val cx: Float, val cy: Float, val w: Float, val h: Float)
 
 class GiftView(context: Context) : View(context) {
-    private val pixmap: Bitmap = loadImage(context) ?: defaultBitmap()
+    private val pixmap: Bitmap? = loadImage(context)
 
     private var t = 0f          // Zeit seit Programmstart
     private var tOpen = 0f      // Zeit seit dem Öffnen
@@ -176,6 +159,7 @@ class GiftView(context: Context) : View(context) {
     private var burstDone = false
     private var trickle = 0f    // Bruchteil noch nicht erzeugter Nachschub-Konfetti
     private val confetti = ArrayList<Confetti>()
+    private var cakeColors = randomCakeColors()
     private val sparkles = List(9) {
         floatArrayOf(Random.uniform(-1.6f, 1.6f), Random.uniform(-1.4f, 1.4f), Random.uniform(0f, TAU))
     }
@@ -197,7 +181,7 @@ class GiftView(context: Context) : View(context) {
 
     // ----------------------------------------------------------- Zustand
     private fun loadImage(context: Context): Bitmap? = try {
-        context.assets.open("gp.jpg").use { BitmapFactory.decodeStream(it) }
+        context.assets.open("picture.jpg").use { BitmapFactory.decodeStream(it) }
     } catch (e: IOException) {
         null
     }
@@ -206,6 +190,7 @@ class GiftView(context: Context) : View(context) {
         opened = true
         tOpen = 0f
         burstDone = false
+        cakeColors = randomCakeColors()
     }
 
     private fun closeBox() {
@@ -267,7 +252,7 @@ class GiftView(context: Context) : View(context) {
 
     private fun sceneTransform(canvas: Canvas) {
         val scale = min(width, height) / 7.5f
-        canvas.translate(width / 2f, height * 0.64f)
+        canvas.translate(width / 2f, height * 0.69f)
         canvas.scale(scale, scale)
     }
 
@@ -464,8 +449,11 @@ class GiftView(context: Context) : View(context) {
         val floatY = if (imgP >= 1f) sin(t * 2f) * 0.05f else 0f
         val cy = start + (end - start) * e + floatY
         val scale = 0.25f + 0.75f * e
-        val k = 2.2f / max(pixmap.width, pixmap.height)
-        return ImageGeometry(0f, cy, pixmap.width * k * scale, pixmap.height * k * scale)
+        // Ohne Bild springt eine quadratisch eingepasste Torte heraus
+        val pmW = pixmap?.width ?: 1
+        val pmH = pixmap?.height ?: 1
+        val k = 2.2f / max(pmW, pmH)
+        return ImageGeometry(0f, cy, pmW * k * scale, pmH * k * scale)
     }
 
     private fun drawImage(canvas: Canvas, imgP: Float) {
@@ -489,6 +477,13 @@ class GiftView(context: Context) : View(context) {
         canvas.clipPath(clip)
         canvas.translate(g.cx, g.cy)
         canvas.rotate((1f - imgP) * -18f + if (imgP >= 1f) sin(t * 1.3f) * 2f else 0f)
+        if (pixmap == null) {
+            canvas.scale(g.w / 2.1f, g.w / 2.1f)
+            canvas.translate(0f, 0.42f)
+            drawCake(canvas)
+            canvas.restore()
+            return
+        }
         val frame = RectF(-g.w / 2 - pad, -g.h / 2 - pad, g.w / 2 + pad, g.h / 2 + pad)
         fill.color = Color.argb(70, 0, 0, 0)
         canvas.drawRoundRect(RectF(frame).apply { offset(0.06f, 0.08f) }, 0.06f, 0.06f, fill)
@@ -498,9 +493,63 @@ class GiftView(context: Context) : View(context) {
         canvas.restore()
     }
 
+    private fun drawCylinder(canvas: Canvas, x: Float, y: Float, r: Float, z0: Float, z1: Float,
+                             side: Int, top: Int) {
+        val bottom = isoEllipse(x, y, r, z0)
+        val lid = isoEllipse(x, y, r, z1)
+        val path = Path()
+        path.moveTo(bottom.left, bottom.centerY())
+        path.arcTo(bottom, 180f, -180f)
+        path.lineTo(lid.right, lid.centerY())
+        path.arcTo(lid, 0f, 180f)
+        path.close()
+        gradient.shader = LinearGradient(bottom.left, 0f, bottom.right, 0f, side, darker(side, 135),
+            Shader.TileMode.CLAMP)
+        canvas.drawPath(path, gradient)
+        fill.color = top
+        canvas.drawOval(lid, fill)
+    }
+
+    /** Tortenstockwerk mit Zuckerguss, der vorne herabtropft. */
+    private fun drawTier(canvas: Canvas, r: Float, z0: Float, z1: Float, color: Int) {
+        drawCylinder(canvas, 0f, 0f, r, z0, z1, color, FROSTING_COLOR)
+        drawCylinder(canvas, 0f, 0f, r, z1 - 0.08f, z1, FROSTING_COLOR, FROSTING_COLOR)
+        pen(FROSTING_COLOR, 0.1f, round = true)
+        floatArrayOf(0.1f, 0.2f, 0.12f, 0.24f, 0.1f, 0.18f, 0.14f).forEachIndexed { i, drip ->
+            val a = (-35f + i * 25f) * PI_F / 180f
+            val x = r * cos(a)
+            val y = r * sin(a)
+            val from = iso(x, y, z1 - 0.05f)
+            val to = iso(x, y, z1 - 0.05f - drip)
+            canvas.drawLine(from.x, from.y, to.x, to.y, stroke)
+        }
+    }
+
+    /** Isometrische Geburtstagstorte, Standfläche im Ursprung. */
+    private fun drawCake(canvas: Canvas) {
+        val plate = Color.parseColor("#eceff1")
+        drawCylinder(canvas, 0f, 0f, 1.0f, -0.06f, 0f, darker(plate, 115), plate)
+        drawTier(canvas, 0.82f, 0f, 0.55f, cakeColors[0])
+        drawTier(canvas, 0.55f, 0.55f, 1.0f, cakeColors[1])
+        // Kerzen von hinten nach vorne, damit vordere die hinteren verdecken
+        listOf(-0.26f to -0.15f, 0.26f to -0.15f, 0f to 0.3f).forEachIndexed { i, (x, y) ->
+            drawCylinder(canvas, x, y, 0.05f, 1.0f, 1.38f, CANDLE_COLOR, lighter(CANDLE_COLOR, 130))
+            val c = iso(x, y, 1.48f)
+            val flicker = 1f + 0.12f * sin(t * 13f + i * 2f)
+            gradient.shader = RadialGradient(c.x, c.y, 0.22f, Color.argb(150, 255, 215, 64),
+                Color.argb(0, 255, 215, 64), Shader.TileMode.CLAMP)
+            canvas.drawCircle(c.x, c.y, 0.22f, gradient)
+            fill.color = Color.parseColor("#ffd740")
+            canvas.drawOval(c.x - 0.05f, c.y - 0.09f * flicker, c.x + 0.05f, c.y + 0.09f * flicker, fill)
+            fill.color = Color.parseColor("#ff9100")
+            val cy = c.y + 0.02f
+            canvas.drawOval(c.x - 0.025f, cy - 0.045f * flicker, c.x + 0.025f, cy + 0.045f * flicker, fill)
+        }
+    }
+
     private fun drawRays(canvas: Canvas, imgP: Float) {
         val g = imageGeometry(imgP)
-        val radius = 4.5f
+        val radius = 9.0f
         gradient.shader = RadialGradient(0f, 0f, radius,
             Color.argb((150 * imgP).toInt(), 255, 230, 140), Color.argb(0, 255, 230, 140),
             Shader.TileMode.CLAMP)
@@ -560,11 +609,11 @@ class GiftView(context: Context) : View(context) {
         val alpha: Int
         when {
             !opened -> {
-                text = "Tipp mich!"
+                text = "Tap me!"
                 alpha = 170 + (85 * sin(t * 3)).toInt()
             }
             tOpen > IMAGE_START + IMAGE_DURATION + 1.5f -> {
-                text = "Nochmal? Tipp!"
+                text = "Again? Tap!"
                 alpha = min(255, ((tOpen - 3f) * 300).toInt())
             }
             else -> return

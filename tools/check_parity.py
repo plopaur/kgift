@@ -42,7 +42,6 @@ BASELINE = "tools/parity-baseline.json"
 CLASS_MAP = {"GiftWidget": "GiftView"}
 # Einheiten, deren Namen sich nicht nur in der Schreibweise unterscheiden
 ALIASES = {
-    "defaultPixmap": "defaultBitmap",
     "GiftView.paintEvent": "GiftView.onDraw",
     "GiftView.mousePressEvent": "GiftView.performClick",
 }

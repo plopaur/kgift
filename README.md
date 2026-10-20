@@ -2,9 +2,9 @@
 
 A small Qt/KDE program, with a native Android port: an isometric gift box that opens with a click.
 The lid flies off, confetti rains down and a picture pops out –
-by default `gp.jpg` from the program folder (if it is missing, a heart is drawn instead).
+by default `picture.jpg` from the program folder (if it is missing, a birthday cake is drawn instead).
 
-<p align="center"><img src="docs/screenshot.png" alt="KGift screenshot: the opened gift box with confetti and the picture popping out" width="420"></p>
+<p align="center"><img src="docs/screenshot.png" alt="KGift screenshot: the opened gift box with confetti and a birthday cake popping out" width="420"></p>
 
 This project is a fork of [KGift on SourceForge](https://sourceforge.net/projects/kgift/) by [hiasl](https://sourceforge.net/u/hiasl/profile/).
 
@@ -13,7 +13,7 @@ This project is a fork of [KGift on SourceForge](https://sourceforge.net/project
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
-.venv/bin/python kgift.py                  # with gp.jpg
+.venv/bin/python kgift.py                  # picture.jpg next to the script, else the cake
 .venv/bin/python kgift.py /path/image.jpg  # with your own image
 ```
 
@@ -31,7 +31,7 @@ On KDE/Linux you can also use your distribution's package instead of a venv
 
 ```bash
 install -Dm755 kgift.py ~/.local/bin/kgift
-install -Dm644 gp.jpg ~/.local/share/kgift/gp.jpg
+install -Dm644 picture.jpg ~/.local/share/kgift/picture.jpg  # optional, your own picture
 install -Dm644 kgift.desktop ~/.local/share/applications/kgift.desktop
 ```
 
@@ -49,7 +49,7 @@ cd android
 Gradle needs JDK 17–21; Android Studio's own JDK is newer, so point `JAVA_HOME`
 at a JDK 21 when building from the terminal.
 
-The picture comes from `android/app/src/main/assets/gp.jpg` (without it, a heart is drawn).
+A birthday cake pops out by default; to show your own picture instead, put it at `android/app/src/main/assets/picture.jpg`.
 
 ### Keeping both ports in sync
 

@@ -4,7 +4,8 @@
 """KGift – eine isometrische Geschenkbox zum Aufklicken.
 
 Klick auf die Box öffnet sie: der Deckel fliegt weg, Konfetti regnet
-und ein Bild springt heraus (standardmäßig gp.jpg neben dem Skript).
+und ein Bild springt heraus (standardmäßig picture.jpg neben dem Skript,
+fehlt es, eine Geburtstagstorte).
 Ein anderes Bild kann als Argument übergeben,
 per Drag & Drop ins Fenster gezogen oder über das Rechtsklick-Menü
 gewählt werden.
@@ -36,8 +37,8 @@ COS30 = math.cos(math.radians(30))
 
 # Standardbild, das aus der Box springt (erste vorhandene Datei gewinnt)
 DEFAULT_IMAGES = [
-    os.path.join(os.path.dirname(os.path.realpath(__file__)), "gp.jpg"),
-    os.path.expanduser("~/.local/share/kgift/gp.jpg"),
+    os.path.join(os.path.dirname(os.path.realpath(__file__)), "picture.jpg"),
+    os.path.expanduser("~/.local/share/kgift/picture.jpg"),
 ]
 
 # Geometrie der Box (Szeneneinheiten)
@@ -49,6 +50,8 @@ RIBBON = 0.17    # halbe Breite des Geschenkbands
 
 BOX_COLOR = QColor(214, 48, 64)
 RIBBON_COLOR = QColor(247, 196, 70)
+FROSTING_COLOR = QColor("#fff8f0")
+CANDLE_COLOR = QColor("#40c4ff")
 CONFETTI_COLORS = [
     QColor("#ff5252"), QColor("#ffd740"), QColor("#69f0ae"),
     QColor("#40c4ff"), QColor("#e040fb"), QColor("#ff9100"),
@@ -79,39 +82,18 @@ def ease_out_back(p, s=1.9):
     return p * p * ((s + 1) * p + s) + 1.0
 
 
-def default_pixmap():
-    """Erzeugt ein Standardbild, falls keines angegeben wurde."""
-    size = 480
-    pm = QPixmap(size, size)
-    p = QPainter(pm)
-    p.setRenderHint(QPainter.Antialiasing)
-    grad = QLinearGradient(0, 0, size, size)
-    grad.setColorAt(0, QColor("#ff9a9e"))
-    grad.setColorAt(1, QColor("#a18cd1"))
-    p.fillRect(pm.rect(), grad)
+def random_cake_colors():
+    """Zwei zufällige, gut unterscheidbare Farben für die Tortenstockwerke."""
+    hue = random.randrange(360)
+    return [QColor.fromHsv((hue + dh) % 360, random.randint(90, 200), random.randint(150, 240))
+            for dh in (0, random.randint(60, 300))]
 
-    rnd = random.Random(7)
-    p.setPen(Qt.NoPen)
-    for _ in range(40):
-        p.setBrush(QColor(255, 255, 255, rnd.randint(40, 120)))
-        r = rnd.uniform(3, 9)
-        p.drawEllipse(QPointF(rnd.uniform(0, size), rnd.uniform(0, size)), r, r)
 
-    heart = QPainterPath(QPointF(240, 340))
-    heart.cubicTo(80, 240, 110, 90, 240, 160)
-    heart.cubicTo(370, 90, 400, 240, 240, 340)
-    p.setBrush(QColor("#ff1744"))
-    p.setPen(QPen(QColor("#ffffff"), 8))
-    p.drawPath(heart)
-
-    font = QFont()
-    font.setPointSize(38)
-    font.setBold(True)
-    p.setFont(font)
-    p.setPen(QColor("#ffffff"))
-    p.drawText(QRectF(0, 350, size, 110), Qt.AlignCenter, "Überraschung!")
-    p.end()
-    return pm
+def iso_ellipse(x, y, r, z):
+    """Umriss eines liegenden Kreises (Mittelpunkt x, y, z) in isometrischer Ansicht."""
+    c = iso(x, y, z)
+    rx, ry = r * COS30 * math.sqrt(2), r * math.sqrt(0.5)
+    return QRectF(QPointF(c.x() - rx, c.y() - ry), QPointF(c.x() + rx, c.y() + ry))
 
 
 class Confetti:
@@ -160,14 +142,13 @@ class GiftWidget(QWidget):
         for path in DEFAULT_IMAGES:
             if self.pixmap is None and os.path.isfile(path):
                 self.load_image(path)
-        if self.pixmap is None:
-            self.pixmap = default_pixmap()
 
         self.t = 0.0          # Zeit seit Programmstart
         self.t_open = 0.0     # Zeit seit dem Öffnen
         self.opened = False
         self.burst_done = False
         self.confetti = []
+        self.cake_colors = random_cake_colors()
         self.sparkles = [(random.uniform(-1.6, 1.6), random.uniform(-1.4, 1.4),
                           random.uniform(0, math.tau)) for _ in range(9)]
 
@@ -182,7 +163,7 @@ class GiftWidget(QWidget):
     def load_image(self, path):
         pm = QPixmap(path)
         if pm.isNull():
-            print(f"Bild konnte nicht geladen werden: {path}", file=sys.stderr)
+            print(f"Could not load picture: {path}", file=sys.stderr)
             return False
         self.pixmap = pm
         return True
@@ -191,6 +172,7 @@ class GiftWidget(QWidget):
         self.opened = True
         self.t_open = 0.0
         self.burst_done = False
+        self.cake_colors = random_cake_colors()
 
     def close_box(self):
         self.opened = False
@@ -240,12 +222,12 @@ class GiftWidget(QWidget):
 
     def contextMenuEvent(self, event):
         menu = QMenu(self)
-        choose = QAction(QIcon.fromTheme("document-open"), "Bild auswählen…", menu)
+        choose = QAction(QIcon.fromTheme("document-open"), "Choose picture…", menu)
         choose.triggered.connect(self.choose_image)
-        reset = QAction(QIcon.fromTheme("view-refresh"), "Box schließen", menu)
+        reset = QAction(QIcon.fromTheme("view-refresh"), "Close box", menu)
         reset.triggered.connect(self.close_box)
         reset.setEnabled(self.opened)
-        quit_ = QAction(QIcon.fromTheme("application-exit"), "Beenden", menu)
+        quit_ = QAction(QIcon.fromTheme("application-exit"), "Quit", menu)
         quit_.triggered.connect(self.close)
         menu.addActions([choose, reset])
         menu.addSeparator()
@@ -254,8 +236,8 @@ class GiftWidget(QWidget):
 
     def choose_image(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, "Bild auswählen", "",
-            "Bilder (*.png *.jpg *.jpeg *.gif *.bmp *.webp *.svg)")
+            self, "Choose picture", "",
+            "Images (*.png *.jpg *.jpeg *.gif *.bmp *.webp *.svg)")
         if path and self.load_image(path):
             self.close_box()
 
@@ -272,7 +254,7 @@ class GiftWidget(QWidget):
     # ----------------------------------------------------------- Zeichnen
     def scene_transform(self, p):
         scale = min(self.width(), self.height()) / 7.5
-        p.translate(self.width() / 2, self.height() * 0.64)
+        p.translate(self.width() / 2, self.height() * 0.69)
         p.scale(scale, scale)
 
     def paintEvent(self, _event):
@@ -463,7 +445,8 @@ class GiftWidget(QWidget):
         float_y = math.sin(self.t * 2.0) * 0.05 if img_p >= 1.0 else 0.0
         cy = start + (end - start) * e + float_y
         scale = 0.25 + 0.75 * e
-        pm_w, pm_h = self.pixmap.width(), self.pixmap.height()
+        # Ohne Bild springt eine quadratisch eingepasste Torte heraus
+        pm_w, pm_h = (self.pixmap.width(), self.pixmap.height()) if self.pixmap else (1, 1)
         k = 2.2 / max(pm_w, pm_h)
         return QPointF(0, cy), pm_w * k * scale, pm_h * k * scale
 
@@ -482,6 +465,12 @@ class GiftWidget(QWidget):
         p.setClipPath(path)
         p.translate(center)
         p.rotate((1.0 - img_p) * -18 + (math.sin(self.t * 1.3) * 2 if img_p >= 1 else 0))
+        if self.pixmap is None:
+            p.scale(w / 2.1, w / 2.1)
+            p.translate(0, 0.42)
+            self.draw_cake(p)
+            p.restore()
+            return
         frame = QRectF(-w / 2 - pad, -hh / 2 - pad, w + 2 * pad, hh + 2 * pad)
         p.setPen(Qt.NoPen)
         p.setBrush(QColor(0, 0, 0, 70))
@@ -492,9 +481,57 @@ class GiftWidget(QWidget):
                      QRectF(self.pixmap.rect()))
         p.restore()
 
+    @staticmethod
+    def draw_cylinder(p, x, y, r, z0, z1, side, top):
+        bottom, lid = iso_ellipse(x, y, r, z0), iso_ellipse(x, y, r, z1)
+        path = QPainterPath(QPointF(bottom.left(), bottom.center().y()))
+        path.arcTo(bottom, 180, 180)
+        path.lineTo(lid.right(), lid.center().y())
+        path.arcTo(lid, 0, -180)
+        path.closeSubpath()
+        grad = QLinearGradient(bottom.left(), 0, bottom.right(), 0)
+        grad.setColorAt(0, side)
+        grad.setColorAt(1, side.darker(135))
+        p.setPen(Qt.NoPen)
+        p.setBrush(grad)
+        p.drawPath(path)
+        p.setBrush(top)
+        p.drawEllipse(lid)
+
+    def draw_tier(self, p, r, z0, z1, color):
+        """Tortenstockwerk mit Zuckerguss, der vorne herabtropft."""
+        self.draw_cylinder(p, 0, 0, r, z0, z1, color, FROSTING_COLOR)
+        self.draw_cylinder(p, 0, 0, r, z1 - 0.08, z1, FROSTING_COLOR, FROSTING_COLOR)
+        p.setPen(QPen(FROSTING_COLOR, 0.1, Qt.SolidLine, Qt.RoundCap))
+        for i, drip in enumerate((0.1, 0.2, 0.12, 0.24, 0.1, 0.18, 0.14)):
+            a = math.radians(-35 + i * 25)
+            x, y = r * math.cos(a), r * math.sin(a)
+            p.drawLine(iso(x, y, z1 - 0.05), iso(x, y, z1 - 0.05 - drip))
+
+    def draw_cake(self, p):
+        """Isometrische Geburtstagstorte, Standfläche im Ursprung."""
+        plate = QColor("#eceff1")
+        self.draw_cylinder(p, 0, 0, 1.0, -0.06, 0, plate.darker(115), plate)
+        self.draw_tier(p, 0.82, 0, 0.55, self.cake_colors[0])
+        self.draw_tier(p, 0.55, 0.55, 1.0, self.cake_colors[1])
+        # Kerzen von hinten nach vorne, damit vordere die hinteren verdecken
+        for i, (x, y) in enumerate(((-0.26, -0.15), (0.26, -0.15), (0, 0.3))):
+            self.draw_cylinder(p, x, y, 0.05, 1.0, 1.38, CANDLE_COLOR, CANDLE_COLOR.lighter(130))
+            c = iso(x, y, 1.48)
+            flicker = 1.0 + 0.12 * math.sin(self.t * 13 + i * 2)
+            glow = QRadialGradient(c, 0.22)
+            glow.setColorAt(0, QColor(255, 215, 64, 150))
+            glow.setColorAt(1, QColor(255, 215, 64, 0))
+            p.setBrush(glow)
+            p.drawEllipse(c, 0.22, 0.22)
+            p.setBrush(QColor("#ffd740"))
+            p.drawEllipse(c, 0.05, 0.09 * flicker)
+            p.setBrush(QColor("#ff9100"))
+            p.drawEllipse(c + QPointF(0, 0.02), 0.025, 0.045 * flicker)
+
     def draw_rays(self, p, img_p):
         center, w, hh = self.image_geometry(img_p)
-        radius = 4.5
+        radius = 9.0
         grad = QRadialGradient(QPointF(0, 0), radius)
         grad.setColorAt(0, QColor(255, 230, 140, int(150 * img_p)))
         grad.setColorAt(1, QColor(255, 230, 140, 0))
@@ -547,10 +584,10 @@ class GiftWidget(QWidget):
 
     def draw_hint(self, p):
         if not self.opened:
-            text = "Klick mich!"
+            text = "Click me!"
             alpha = 170 + int(85 * math.sin(self.t * 3))
         elif self.t_open > IMAGE_START + IMAGE_DURATION + 1.5:
-            text = "Nochmal? Klick!"
+            text = "Again? Click!"
             alpha = min(255, int((self.t_open - 3.0) * 300))
         else:
             return
