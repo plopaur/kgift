@@ -254,7 +254,9 @@ class GiftWidget(QWidget):
     # ----------------------------------------------------------- Zeichnen
     def scene_transform(self, p):
         scale = min(self.width(), self.height()) / 7.5
-        p.translate(self.width() / 2, self.height() * 0.69)
+        # Box samt Torte (ca. 5,1 Einheiten darüber bis 1 darunter) auf hohen
+        # Bildschirmen mittig, sonst etwas unterhalb der Mitte
+        p.translate(self.width() / 2, min(self.height() * 0.69, self.height() / 2 + 2.05 * scale))
         p.scale(scale, scale)
 
     def paintEvent(self, _event):

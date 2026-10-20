@@ -252,7 +252,9 @@ class GiftView(context: Context) : View(context) {
 
     private fun sceneTransform(canvas: Canvas) {
         val scale = min(width, height) / 7.5f
-        canvas.translate(width / 2f, height * 0.69f)
+        // Box samt Torte (ca. 5,1 Einheiten darüber bis 1 darunter) auf hohen
+        // Bildschirmen mittig, sonst etwas unterhalb der Mitte
+        canvas.translate(width / 2f, min(height * 0.69f, height / 2f + 2.05f * scale))
         canvas.scale(scale, scale)
     }
 
